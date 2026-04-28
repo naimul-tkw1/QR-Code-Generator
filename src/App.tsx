@@ -38,6 +38,8 @@ type MyCornerDotType = CornerDotType;
 interface QRState {
   data: string;
   dotsColor: string;
+  dotsColor2: string; // For gradients
+  useGradient: boolean;
   backgroundColor: string;
   dotsType: MyDotType;
   cornersColor: string;
@@ -48,20 +50,49 @@ interface QRState {
   errorCorrectionLevel: ErrorCorrectionLevel;
 }
 
-interface PosterState {
-  text: string;
-  show: boolean;
-  theme: 'dark' | 'light' | 'custom';
-  customBg: string;
-  customText: string;
-}
-
-// --- Components ---
+const PRESETS = [
+  {
+    name: 'Classic Black',
+    dots: '#000000',
+    bg: '#ffffff',
+    dotsType: 'square' as MyDotType,
+    corners: 'square' as CornerType,
+  },
+  {
+    name: 'Cyber Neon',
+    dots: '#00FF41',
+    dots2: '#008F11',
+    useGradient: true,
+    bg: '#0D0208',
+    dotsType: 'dots' as MyDotType,
+    corners: 'extra-rounded' as CornerType,
+  },
+  {
+    name: 'Sunset Glow',
+    dots: '#FF512F',
+    dots2: '#DD2476',
+    useGradient: true,
+    bg: '#ffffff',
+    dotsType: 'classy-rounded' as MyDotType,
+    corners: 'extra-rounded' as CornerType,
+  },
+  {
+    name: 'Royal Blue',
+    dots: '#000046',
+    dots2: '#1CB5E0',
+    useGradient: true,
+    bg: '#ffffff',
+    dotsType: 'rounded' as MyDotType,
+    corners: 'rounded' as CornerType,
+  }
+];
 
 export default function App() {
   const [qrState, setQrState] = useState<QRState>({
-    data: 'https://ais-dev-3nsau6q2e62g4wk6cr46vc-251970894780.us-east1.run.app',
+    data: 'https://canada.ca/',
     dotsColor: '#000000',
+    dotsColor2: '#4facfe',
+    useGradient: false,
     backgroundColor: '#ffffff',
     dotsType: 'rounded',
     cornersColor: '#000000',
@@ -73,11 +104,17 @@ export default function App() {
   });
 
   const [poster, setPoster] = useState<PosterState>({
-    text: 'Summit 2026',
+    text: 'Your Text here',
     show: true,
     theme: 'dark',
     customBg: '#000000',
     customText: '#ffffff',
+  });
+
+  const [posterGradient, setPosterGradient] = useState({
+    color1: '#EFEFEF',
+    color2: '#EFEFEF',
+    useGradient: false
   });
 
   const qrRef = useRef<HTMLDivElement>(null);
@@ -102,12 +139,30 @@ export default function App() {
     }
   }, [qrState]);
 
+  const applyPreset = (preset: typeof PRESETS[0]) => {
+    setQrState(prev => ({
+      ...prev,
+      dotsColor: preset.dots,
+      dotsColor2: (preset as any).dots2 || prev.dotsColor2,
+      useGradient: (preset as any).useGradient || false,
+      backgroundColor: preset.bg,
+      dotsType: preset.dotsType,
+      cornersType: preset.corners,
+      cornersColor: preset.dots,
+      cornersDotColor: preset.dots,
+    }));
+  };
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setQrState(prev => ({ ...prev, logo: e.target?.result as string }));
+        setQrState(prev => ({ 
+          ...prev, 
+          logo: e.target?.result as string,
+          errorCorrectionLevel: 'H' // Default to high error correction when logo is present
+        }));
       };
       reader.readAsDataURL(file);
     }
@@ -183,7 +238,7 @@ export default function App() {
                 type="text"
                 value={qrState.data}
                 onChange={(e) => setQrState(prev => ({ ...prev, data: e.target.value }))}
-                placeholder="Enter URL or text..."
+                placeholder="https://canada.ca/"
                 className="w-full bg-white border border-[#E5E5E5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-all"
               />
               <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
